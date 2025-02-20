@@ -10,7 +10,7 @@
 	"homepage": "https://github.com/zokugun/nsx",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/zokugun/nsx.git"
+		"url": "git+https://github.com/zokugun/nsx.git"
 	},
 	"bugs": {
 		"url": "https://github.com/zokugun/nsx/issues"
