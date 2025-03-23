@@ -1,11 +1,11 @@
 import { resolve } from 'path';
-import { exit } from 'process';
-import { bgRed } from 'ansi-colors';
+import { xatry } from '@zokugun/xtry';
 import { Command } from 'commander';
 import enquirer from 'enquirer';
-import pkg from '../package.json';
+import pkg from '../package.json' with { type: 'json' };
 import { getScripts } from './utils/get-scripts.js';
 import { matchQuery } from './utils/match-query.js';
+import { quit } from './utils/quit.js';
 import { runScript } from './utils/run-script.js';
 import { shortenScripts } from './utils/shorten-scripts.js';
 
@@ -21,54 +21,52 @@ program
 	.option('-c, --confirm', 'Confirm before running the selected script.', false)
 	.option('-p, --path <path>', 'Path to the folder containing package.json.', '.')
 	.option('-s, --separator <separator>', 'The separator for shortened alias.', ':')
-	.action(async (query: string, arguments_: string[], options: { confirm: boolean; path: string; separator: string }) => {
+	.action(async (query: string, args: string[], options: { confirm: boolean; path: string; separator: string }) => {
 		const path = resolve(options.path);
+		const { fails, value: scripts, error } = getScripts(path);
 
-		try {
-			const scripts = getScripts(path);
-			let matches: string[];
+		if(fails) {
+			quit(error.message);
+		}
 
-			if(query) {
-				if(scripts[query]) {
-					await runScript(query, path, arguments_, options.confirm);
+		let matches: string[];
 
-					return;
-				}
+		if(query) {
+			if(scripts[query]) {
+				await runScript(query, path, args, options.confirm);
 
-				const shortenedScripts = shortenScripts(scripts, options.separator);
-
-				matches = matchQuery(scripts, shortenedScripts, query);
-
-				if(matches.length === 1) {
-					await runScript(matches[0], path, arguments_, options.confirm);
-
-					return;
-				}
-			}
-			else {
-				matches = Object.keys(scripts);
+				return;
 			}
 
-			const response = await enquirer.prompt<{ script: string }>({
-				type: 'select',
-				name: 'script',
-				message: 'Pick a script',
-				choices: matches,
-			});
+			const shortenedScripts = shortenScripts(scripts, options.separator);
 
-			if(response.script) {
-				await runScript(response.script, path, arguments_, false);
+			matches = matchQuery(scripts, shortenedScripts, query);
+
+			if(matches.length === 0) {
+				quit('No scripts matched!');
+			}
+			else if(matches.length === 1) {
+				await runScript(matches[0], path, args, options.confirm);
+
+				return;
 			}
 		}
-		catch (error) {
-			if(typeof error === 'string') {
-				console.error(`${bgRed('ERROR:')} ${error}`);
-			}
-			else {
-				console.error(`${bgRed('ERROR:')} ${(error as Error).message}`);
-			}
+		else {
+			matches = Object.keys(scripts);
+		}
 
-			exit(1);
+		const { value: response } = await xatry(enquirer.prompt<{ script: string }>({
+			type: 'select',
+			name: 'script',
+			message: 'Pick a script',
+			choices: matches,
+		}));
+
+		if(response?.script) {
+			await runScript(response.script, path, args, false);
+		}
+		else {
+			quit('No script selected');
 		}
 	});
 
