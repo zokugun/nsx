@@ -9,6 +9,8 @@ import { quit } from './utils/quit.js';
 import { runScript } from './utils/run-script.js';
 import { shortenScripts } from './utils/shorten-scripts.js';
 
+const DEFAULT_SEPARATOR = /[:-]/;
+
 const program = new Command();
 
 program
@@ -20,7 +22,7 @@ program
 	.enablePositionalOptions()
 	.option('-c, --confirm', 'Confirm before running the selected script.', false)
 	.option('-p, --path <path>', 'Path to the folder containing package.json.', '.')
-	.option('-s, --separator <separator>', 'The separator for shortened alias.', ':')
+	.option('-s, --separator <separator>', 'The separator for shortened alias.', ':-')
 	.action(async (query: string, args: string[], options: { confirm: boolean; path: string; separator: string }) => {
 		const path = resolve(options.path);
 		const { fails, value: scripts, error } = getScripts(path);
@@ -38,7 +40,8 @@ program
 				return;
 			}
 
-			const shortenedScripts = shortenScripts(scripts, options.separator);
+			const separator = options.separator === ':-' ? DEFAULT_SEPARATOR : new RegExp(`[${options.separator}]`);
+			const shortenedScripts = shortenScripts(scripts, separator);
 
 			matches = matchQuery(scripts, shortenedScripts, query);
 

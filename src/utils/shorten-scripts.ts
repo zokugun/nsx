@@ -1,6 +1,6 @@
 import { type ShortScript } from '../types.js';
 
-export function shortenScripts(scripts: Record<string, string>, separator: string): ShortScript[] {
+export function shortenScripts(scripts: Record<string, string>, separator: RegExp): ShortScript[] {
 	const result: ShortScript[] = [];
 
 	for(const [name] of Object.entries(scripts)) {
