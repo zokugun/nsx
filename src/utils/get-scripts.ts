@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import {
-	err, ok, type Result, xtry,
-} from '@zokugun/xtry';
+import { err, ok, type Result, xtry } from '@zokugun/xtry';
 import c from 'ansi-colors';
 
 export type GetScriptsError = { type: 'NO_SCRIPTS' | 'UNREADABLE'; message: string };

@@ -3,7 +3,7 @@ import { sync } from 'cross-spawn';
 import enquirer from 'enquirer';
 import { quit } from './quit.js';
 
-export async function runScript(script: string, path: string, args: string[], confirm: boolean): Promise<void> {
+export async function runScript(script: string, path: string, args: string[], confirm: boolean, continueOnError: boolean): Promise<void> {
 	if(args.length > 0) {
 		args.unshift('--');
 	}
@@ -24,17 +24,22 @@ export async function runScript(script: string, path: string, args: string[], co
 		}
 	}
 
-	const { fails, error } = xtry(() => sync('npm', ['run', script, ...args], {
+	const result = xtry(() => sync('npm', ['run', script, ...args], {
 		stdio: 'inherit',
 		cwd: path,
 	}));
 
-	if(fails) {
-		if(typeof error === 'string') {
-			quit(error);
+	if(!continueOnError) {
+		if(result.fails) {
+			if(typeof result.error === 'string') {
+				quit(result.error);
+			}
+			else {
+				quit((result.error as Error).message);
+			}
 		}
-		else {
-			quit((error as Error).message);
+		else if(result.value.status !== 0) {
+			quit(`status: ${result.value.status}`);
 		}
 	}
 }
