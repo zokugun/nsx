@@ -66,6 +66,9 @@ program
 
 					return;
 				}
+				else {
+					quit(`Multiple matches for ${c.red(request.query)}!`);
+				}
 			}
 			else {
 				const separator = options.separator === ':-' ? DEFAULT_SEPARATOR : new RegExp(`[${options.separator}]`);
