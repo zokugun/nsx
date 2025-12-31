@@ -1,13 +1,13 @@
 import { resolve } from 'path';
 import { exit } from 'process';
-import { stringifyError, xatry } from '@zokugun/xtry';
+import { stringifyError } from '@zokugun/xtry';
 import c from 'ansi-colors';
 import { Command } from 'commander';
-import enquirer from 'enquirer';
 import pkg from '../package.json' with { type: 'json' };
 import { getScripts } from './utils/get-scripts.js';
 import { matchQuery } from './utils/match-query.js';
 import { parseQuery } from './utils/parse-query.js';
+import { pickScript } from './utils/pick-script.js';
 import { quit } from './utils/quit.js';
 import { runParallel } from './utils/run-parallel.js';
 import { runScript } from './utils/run-script.js';
@@ -35,8 +35,6 @@ program
 			quit(error.message);
 		}
 
-		let matches: string[];
-
 		if(query) {
 			const { fails, value: requests, error } = parseQuery(query);
 
@@ -49,25 +47,22 @@ program
 
 				if(scripts[request.query]) {
 					await runScript(request.query, path, args, options.confirm, false);
-
-					return;
-				}
-
-				const separator = options.separator === ':-' ? DEFAULT_SEPARATOR : new RegExp(`[${options.separator}]`);
-				const shortenedScripts = shortenScripts(scripts, separator);
-
-				matches = matchQuery(scripts, shortenedScripts, request.query);
-
-				if(matches.length === 0) {
-					quit('No scripts matched!');
-				}
-				else if(matches.length === 1) {
-					await runScript(matches[0], path, [...request.args, ...args], options.confirm, false);
-
-					return;
 				}
 				else {
-					quit(`Multiple matches for ${c.red(request.query)}!`);
+					const separator = options.separator === ':-' ? DEFAULT_SEPARATOR : new RegExp(`[${options.separator}]`);
+					const shortenedScripts = shortenScripts(scripts, separator);
+
+					const matches = matchQuery(scripts, shortenedScripts, request.query);
+
+					if(matches.length === 0) {
+						quit('No scripts matched!');
+					}
+					else if(matches.length === 1) {
+						await runScript(matches[0], path, [...request.args, ...args], options.confirm, false);
+					}
+					else {
+						await pickScript(matches, path, [...request.args, ...args]);
+					}
 				}
 			}
 			else {
@@ -96,7 +91,6 @@ program
 				if(requests[0].type === 'parallel') {
 					const procs = requests.map(async (request) => runParallel(request.script!, path, [...request.args, ...args]));
 					const results = await Promise.all(procs);
-
 					const error = false;
 
 					for(const [i, response] of results.entries()) {
@@ -116,34 +110,16 @@ program
 					if(error) {
 						exit(1);
 					}
-
-					return;
 				}
 				else {
 					for(const request of requests) {
 						await runScript(request.script!, path, [...request.args, ...args], false, request.continueOnError);
 					}
-
-					return;
 				}
 			}
 		}
 		else {
-			matches = Object.keys(scripts);
-		}
-
-		const { value: response } = await xatry(enquirer.prompt<{ script: string }>({
-			type: 'select',
-			name: 'script',
-			message: 'Pick a script',
-			choices: matches,
-		}));
-
-		if(response?.script) {
-			await runScript(response.script, path, args, false, false);
-		}
-		else {
-			quit('No script selected');
+			await pickScript(Object.keys(scripts), path, args);
 		}
 	});
 
