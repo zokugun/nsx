@@ -1,9 +1,13 @@
 {
+	"required": [
+		"dependencies"
+	],
 	"sortToTop": [
 		"name",
 		"displayName",
 		"description",
 		"version",
+		"since",
 		"private",
 		"author",
 		"publisher",
@@ -16,11 +20,15 @@
 		"bin",
 		"exports",
 		"main",
+		"module",
 		"types",
+		"typesVersions",
 		"scripts",
 		"dependencies",
 		"devDependencies",
 		"optionalDependencies",
+		"peerDependencies",
+		"overrides",
 		"keywords"
 	],
 	"finalNewLine": true

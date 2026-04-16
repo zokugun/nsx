@@ -1,5 +1,5 @@
+import { enquirer } from '@zokugun/cli-utils';
 import { xatry } from '@zokugun/xtry';
-import enquirer from 'enquirer';
 import { quit } from './quit.js';
 import { runScript } from './run-script.js';
 

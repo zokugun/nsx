@@ -1,7 +1,7 @@
 export function extractCommand(value: string): { query: string; args: string } {
 	value = value.trim();
 
-	const length = value.length;
+	const { length } = value;
 
 	if(length === 0) {
 		return { query: '', args: '' };

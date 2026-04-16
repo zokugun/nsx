@@ -1,5 +1,5 @@
+import { c } from '@zokugun/cli-utils';
 import { err, ok, type Result } from '@zokugun/xtry';
-import c from 'ansi-colors';
 import { type RequestType, type Request } from '../types.js';
 import { splitCommandLine } from './split-command-line.js';
 

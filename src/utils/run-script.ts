@@ -1,6 +1,6 @@
+import { enquirer } from '@zokugun/cli-utils';
 import { xatry, xtry } from '@zokugun/xtry';
 import { sync } from 'cross-spawn';
-import enquirer from 'enquirer';
 import { quit } from './quit.js';
 
 export async function runScript(script: string, path: string, args: string[], confirm: boolean, continueOnError: boolean): Promise<void> {
